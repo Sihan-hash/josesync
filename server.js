@@ -1,8 +1,9 @@
 const WebSocket = require('ws');
 
 const port = process.env.PORT || 8000;
-
 const wss = new WebSocket.Server({ port });
+
+const clients = [];
 
 console.log(`JoseSync iniciado en puerto ${port}`);
 
@@ -10,26 +11,35 @@ wss.on('connection', (ws) => {
 
     console.log('Cliente conectado');
 
-ws.on('message', (message) => {
+    ws.on('message', (message) => {
 
-    console.log('====================');
-    console.log('MENSAJE RECIBIDO:');
-    console.log(message.toString());
-    console.log('====================');
+        const text = message.toString();
 
-    ws.send(message.toString());
+        console.log('====================');
+        console.log('MENSAJE RECIBIDO:');
+        console.log(text);
+        console.log('====================');
 
-    wss.clients.forEach((client) => {
+        try {
+            const data = JSON.parse(text);
 
-            if (
-                client.readyState === WebSocket.OPEN &&
-                client !== ws
-            ) {
-                client.send(message.toString());
+            if(data.type === "init") {
+
+                ws.send(JSON.stringify({
+                    type: "list",
+                    data: ["connected"]
+                }));
+
+                ws.send(JSON.stringify({
+                    type: "Chat",
+                    name: "JoseSync",
+                    data: "Servidor conectado correctamente"
+                }));
             }
 
-        });
-
+        } catch(e) {
+            console.log(e);
+        }
     });
 
 });
