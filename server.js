@@ -1,7 +1,9 @@
 const WebSocket = require('ws');
 
-const port = process.env.PORT || 8000;
+const port = process.env.PORT || 10000;
 const wss = new WebSocket.Server({ port });
+
+let messageId = 1;
 
 console.log(`JoseSync iniciado en puerto ${port}`);
 
@@ -22,17 +24,17 @@ wss.on('connection', (ws) => {
 
             const data = JSON.parse(text);
 
-            // Registro inicial del jugador
-            if (data.type === "init") {
+            if (data.type === 'init') {
+
                 ws.playerName = data.name;
                 ws.channel = data.channel;
 
                 console.log(`Jugador registrado: ${data.name} | Canal: ${data.channel}`);
+
                 return;
             }
 
-            // Mensajes de chat
-            if (data.type === "message") {
+            if (data.type === 'message') {
 
                 console.log(`${ws.playerName}: ${data.message}`);
 
@@ -44,9 +46,11 @@ wss.on('connection', (ws) => {
                     ) {
 
                         client.send(JSON.stringify({
-                            type: data.topic,
+                            type: "message",
+                            id: messageId++,
+                            topic: data.topic,
                             name: ws.playerName,
-                            data: data.message
+                            message: data.message
                         }));
 
                     }
@@ -55,14 +59,19 @@ wss.on('connection', (ws) => {
 
             }
 
-        } catch (e) {
-            console.log('ERROR:', e);
+        } catch (err) {
+
+            console.log("ERROR:");
+            console.log(err);
+
         }
 
     });
 
     ws.on('close', () => {
+
         console.log(`Desconectado: ${ws.playerName || 'Desconocido'}`);
+
     });
 
 });
