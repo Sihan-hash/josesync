@@ -7,6 +7,43 @@ let messageId = 1;
 
 console.log(`JoseSync iniciado en puerto ${port}`);
 
+function updatePlayerList(channel) {
+
+    const players = [];
+
+    wss.clients.forEach((client) => {
+
+        if (
+            client.readyState === WebSocket.OPEN &&
+            client.channel === channel &&
+            client.playerName
+        ) {
+            players.push(client.playerName);
+        }
+
+    });
+
+    wss.clients.forEach((client) => {
+
+        if (
+            client.readyState === WebSocket.OPEN &&
+            client.channel === channel
+        ) {
+
+            client.send(JSON.stringify({
+                type: "message",
+                id: messageId++,
+                topic: "PlayerList",
+                name: "SERVER",
+                message: players
+            }));
+
+        }
+
+    });
+
+}
+
 wss.on('connection', (ws) => {
 
     console.log('Cliente conectado');
@@ -30,6 +67,8 @@ wss.on('connection', (ws) => {
                 ws.channel = data.channel;
 
                 console.log(`Jugador registrado: ${data.name} | Canal: ${data.channel}`);
+
+                updatePlayerList(ws.channel);
 
                 return;
             }
@@ -71,6 +110,10 @@ wss.on('connection', (ws) => {
     ws.on('close', () => {
 
         console.log(`Desconectado: ${ws.playerName || 'Desconocido'}`);
+
+        if (ws.channel) {
+            updatePlayerList(ws.channel);
+        }
 
     });
 
