@@ -10,12 +10,14 @@ wss.on('connection', (ws) => {
 
     console.log('Cliente conectado');
 
-  ws.on('message', (message) => {
+ws.on('message', (message) => {
 
     console.log('====================');
     console.log('MENSAJE RECIBIDO:');
     console.log(message.toString());
     console.log('====================');
+
+    ws.send(message.toString());
 
     wss.clients.forEach((client) => {
 
